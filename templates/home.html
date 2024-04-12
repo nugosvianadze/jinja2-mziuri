@@ -4,4 +4,11 @@ Home Page
 {% endblock %}
 {% block body %}
 <h1 style="text-align: center">This Is a Home Page</h1>
+    {% for key, value in d.items() %}
+    {{ key }} {{ value }}
+    {% endfor %}
+    <h1>
+    Hello {{ first_name }} {{ last_name }}
+    middle letter is {{ first_name|middle }}
+    </h1>
 {% endblock %}
