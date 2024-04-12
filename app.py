@@ -10,8 +10,8 @@ def middle(value):
     return value
 
 
-print(app.jinja_env.filters)
 app.jinja_env.filters['middle'] = middle
+
 
 @app.route('/')
 @app.route('/home')
@@ -21,6 +21,7 @@ def home():
     d = {'name': 'nugzari', 'age': 20}
     return render_template('home.html', first_name=first_name,
                            last_name=last_name, num=num, d=d)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5100)
