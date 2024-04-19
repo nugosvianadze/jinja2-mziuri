@@ -14,12 +14,16 @@ Login Page
     {{ form.email }}
   </div>
     <div class="mb-3">
+    {{ form.username.label }}
+    {{ form.username }}
+  </div>
+    <div class="mb-3">
     {{ form.password.label }}
     {{ form.password }}  </div>
-  <div class="mb-3">
-      {{ render_input('password', 'Enter Password', 'password', 'form-control') }}
-  </div>
   <input type="submit" class="btn btn-primary"/>
+    {% for errors, value in form.errors.items() %}
+         {{ value }}
+    {% endfor %}
 </form>
 </div>
 

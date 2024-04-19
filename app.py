@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 
 from forms import LoginForm
 
@@ -29,10 +29,14 @@ def home():
 def login():
     form = LoginForm()
     if request.method == 'POST':
-        pass
+        if form.validate_on_submit():
+            print('forma validuria')
+            return redirect(url_for('home'))
+        print(form.errors)
+        return render_template('login.html', form=form)
     return render_template('login.html', form=form)
 
-app.secret_key = 'kjandjasdbg23g12y3g871gca7dfs8osaff7o'
+app.secret_key = 'ijbiazbadub84v8rbsibiewfvidvsa'
 
 if __name__ == '__main__':
     app.run(debug=True, port=5100)
