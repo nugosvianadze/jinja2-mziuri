@@ -1,8 +1,30 @@
 from flask import Flask, render_template, request, redirect, url_for
-
+import sqlite3
 from forms import LoginForm
 
 app = Flask(__name__)
+
+conn = sqlite3.connect('mziuri.db')
+cursor = conn.cursor()
+
+cursor.execute("""
+create table if not exists users 
+(id integer primary key,
+first_name text,
+last_name text,
+email text,
+age integer,
+birth_date text,
+password text)
+""")
+conn.commit()
+
+users = cursor.execute("""
+select * from users
+""")
+print(users.fetchone())
+# cursor.close()
+# conn.close()
 
 
 def middle(value):
