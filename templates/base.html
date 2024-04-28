@@ -16,6 +16,15 @@
 </head>
 <body>
 {% include 'components/header.html' %}
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li style="list-style: none;">{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 {% block body %}
 {% endblock %}
 

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms.fields import EmailField, StringField, PasswordField, SubmitField
+from wtforms.fields import EmailField, StringField, PasswordField, SubmitField, IntegerField, DateField
 from wtforms.validators import data_required, email, length, ValidationError
 
 
@@ -16,3 +16,19 @@ class LoginForm(FlaskForm):
         print(field, field.data)
         if not field.data.isalpha():
             raise ValidationError('Username Must not include numeric numbers')
+
+
+class RegistrationForm(FlaskForm):
+    first_name = StringField('First Name', validators=[data_required()],
+                             render_kw={'class': 'form-control', 'placeholder': 'Enter First Name'})
+    last_name = StringField('Last Name', validators=[data_required()],
+                            render_kw={'class': 'form-control', 'placeholder': 'Enter Last Name'})
+    age = IntegerField('Age', validators=[data_required()],
+                       render_kw={'class': 'form-control', 'placeholder': 'Enter Age'})
+    birthday = DateField('Birthday', validators=[data_required()],
+                         render_kw={'class': 'form-control', 'placeholder': 'Enter Birthday Date'})
+    email = EmailField('Email', validators=[data_required(), email()],
+                       render_kw={'class': 'form-control', 'placeholder': 'Enter Email'})
+    password = PasswordField('Password', validators=[data_required()],
+                             render_kw={'class': 'form-control', 'placeholder': 'Enter Password'})
+    submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary'})

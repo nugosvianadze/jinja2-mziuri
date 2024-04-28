@@ -1,30 +1,20 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
-from forms import LoginForm
+from forms import LoginForm, RegistrationForm
 
 app = Flask(__name__)
 
-conn = sqlite3.connect('mziuri.db')
-cursor = conn.cursor()
 
-cursor.execute("""
-create table if not exists users 
-(id integer primary key,
-first_name text,
-last_name text,
-email text,
-age integer,
-birth_date text,
-password text)
-""")
-conn.commit()
-
-users = cursor.execute("""
-select * from users
-""")
-print(users.fetchone())
-# cursor.close()
-# conn.close()
+# cursor.execute("""
+# create table if not exists users
+# (id integer primary key,
+# first_name text,
+# last_name text,
+# email text,
+# age integer,
+# birth_date text,
+# password text)
+# """)
 
 
 def middle(value):
@@ -58,7 +48,57 @@ def login():
         return render_template('login.html', form=form)
     return render_template('login.html', form=form)
 
+
+@app.route("/register", methods=["POST", "GET"])
+def register():
+    form = RegistrationForm()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            first_name = form.first_name.data
+            last_name = form.last_name.data
+            age = form.age.data
+            email = form.email.data
+            birthday = form.birthday.data
+            password = form.password.data
+
+            conn = sqlite3.connect('mziuri.db', check_same_thread=False)
+            cursor = conn.cursor()
+            cursor.execute("""
+            select * from users where email = ?
+            """, (email,))
+            user_exists = cursor.fetchone()
+            conn.close()
+            print(user_exists)
+            if user_exists is not None:
+                # flash('User With This Email Already Exists!')
+                form.email.errors = ['User With This Email Already Exists!']
+                return render_template('register.html', form=form)
+
+            conn = sqlite3.connect('mziuri.db', check_same_thread=False)
+            cursor = conn.cursor()
+            cursor.execute("""
+            insert into users (first_name, last_name, email, age, birth_date, password) values
+            (?, ?, ?, ?, ?, ?)
+            """, (first_name, last_name, email, age, birthday, password))
+            conn.commit()
+            conn.close()
+            flash('User Successfully Created!!')
+            return redirect(url_for('home'))
+        print(form.errors)
+        return render_template('register.html', form=form)
+    return render_template('register.html', form=form)
+
 app.secret_key = 'ijbiazbadub84v8rbsibiewfvidvsa'
+
+
+@app.route('/users')
+def users():
+    conn = sqlite3.connect('mziuri.db', check_same_thread=False)
+    cursor = conn.cursor()
+    cursor.execute("select * from users")
+    users = cursor.fetchall()
+    conn.close()
+    return render_template('users.html', users=users)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5100)
