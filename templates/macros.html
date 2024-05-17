@@ -3,11 +3,20 @@
 class="{{ class }}">
 {% endmacro %}
 
-{% macro render_field(field) %}
+{% macro render_field(field, value='') %}
+
   {% if field.name != 'submit' %}
   <dt>{{ field.label }}
   {% endif %}
-  <dd>{{ field(**kwargs)|safe }}
+
+  {% if field.name == 'submit' %}
+    <dd>{{ field(value='submit', **kwargs)|safe }}
+  {% elif value %}
+    <dd>{{ field(value=value, **kwargs)|safe }}
+  {% else %}
+    <dd>{{ field(**kwargs)|safe }}
+  {% endif %}
+
   {% if field.errors %}
     <ul class=errors>
     {% for error in field.errors %}

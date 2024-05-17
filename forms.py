@@ -32,3 +32,9 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[data_required()],
                              render_kw={'class': 'form-control', 'placeholder': 'Enter Password'})
     submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary'})
+
+
+class UserUpdateForm(RegistrationForm):
+    birthday = None
+    email = None
+    password = None

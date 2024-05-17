@@ -1,20 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
-from forms import LoginForm, RegistrationForm
+from forms import LoginForm, RegistrationForm, UserUpdateForm
 
 app = Flask(__name__)
-
-
-# cursor.execute("""
-# create table if not exists users
-# (id integer primary key,
-# first_name text,
-# last_name text,
-# email text,
-# age integer,
-# birth_date text,
-# password text)
-# """)
 
 
 def middle(value):
@@ -22,6 +10,20 @@ def middle(value):
         len_value = (len(value) - 1) / 2
         value = value[int(len_value)]
     return value
+
+
+def create_conn():
+    conn = sqlite3.connect('mziuri.db', check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def create_cursor(conn):
+    return conn.cursor()
+
+
+def close_conn(conn):
+    return conn.close()
 
 
 app.jinja_env.filters['middle'] = middle
@@ -61,27 +63,27 @@ def register():
             birthday = form.birthday.data
             password = form.password.data
 
-            conn = sqlite3.connect('mziuri.db', check_same_thread=False)
-            cursor = conn.cursor()
+            conn = create_conn()
+            cursor = create_cursor(conn)
             cursor.execute("""
             select * from users where email = ?
             """, (email,))
             user_exists = cursor.fetchone()
-            conn.close()
+            close_conn(conn)
             print(user_exists)
             if user_exists is not None:
                 # flash('User With This Email Already Exists!')
                 form.email.errors = ['User With This Email Already Exists!']
                 return render_template('register.html', form=form)
 
-            conn = sqlite3.connect('mziuri.db', check_same_thread=False)
-            cursor = conn.cursor()
+            conn = create_conn()
+            cursor = create_cursor(conn)
             cursor.execute("""
             insert into users (first_name, last_name, email, age, birth_date, password) values
             (?, ?, ?, ?, ?, ?)
             """, (first_name, last_name, email, age, birthday, password))
             conn.commit()
-            conn.close()
+            close_conn(conn)
             flash('User Successfully Created!!')
             return redirect(url_for('home'))
         print(form.errors)
@@ -93,12 +95,54 @@ app.secret_key = 'ijbiazbadub84v8rbsibiewfvidvsa'
 
 @app.route('/users')
 def users():
-    conn = sqlite3.connect('mziuri.db', check_same_thread=False)
-    cursor = conn.cursor()
+    form = UserUpdateForm()
+    conn = create_conn()
+    cursor = create_cursor(conn)
     cursor.execute("select * from users")
     users = cursor.fetchall()
-    conn.close()
-    return render_template('users.html', users=users)
+    close_conn(conn)
+    return render_template('users.html', users=users, form=form)
 
+
+@app.route('/update_user/<int:user_id>', methods=['GET', 'POST'])
+def update_user(user_id):
+    form = UserUpdateForm()
+    conn = create_conn()
+    cursor = create_cursor(conn)
+    first_name = form.first_name.data
+    last_name = form.last_name.data
+    age = form.age.data
+    user = cursor.execute("""
+    select * from users where id = ?
+    """, (user_id, ))
+    if not user.fetchone():
+        flash('User With This Id Does Not Exist!')
+        return redirect(url_for('users'))
+    cursor.execute("""
+    update users set first_name = ?, last_name = ?, age = ? where id = ?
+    """, (first_name, last_name, age, user_id))
+    flash("User Updated Successfully!!!!")
+    conn.commit()
+    close_conn(conn)
+    return redirect(url_for('users'))
+
+
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+    conn = create_conn()
+    cursor = create_cursor(conn)
+    user = cursor.execute("""
+        select * from users where id = ?
+        """, (user_id,))
+    if not user.fetchone():
+        flash('User With This Id Does Not Exist!')
+        return redirect(url_for('users'))
+    cursor.execute("""
+    delete from users where id = ?
+    """, (user_id,))
+    flash("User Successfully Deleted!!!!!")
+    conn.commit()
+    close_conn(conn)
+    return redirect(url_for('users'))
 if __name__ == '__main__':
     app.run(debug=True, port=5100)

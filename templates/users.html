@@ -6,9 +6,74 @@ users Page
 
 {% block body %}
 
-{% for user in users %}
- {{ user }}
-<br>
-{% endfor %}
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">First Name</th>
+      <th scope="col">Last Name</th>
+      <th scope="col">Email</th>
+      <th scope="col">Age</th>
+      <th scope="col">Birth Date</th>
+      <th scope="col">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for user in users %}
+  <br>
+    <tr>
+      <th scope="row">{{ loop.index }}</th>
+      <td>{{ user.first_name }} </td>
+      <td>{{ user.last_name }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ user.age }}</td>
+      <td>{{ user.birth_date }}</td>
+      <td>
+        <img src="{{ url_for('static', filename='images/update.png') }}" alt="" width="20" height="20"
+             data-bs-toggle="modal" data-bs-target="#modal-with-user-id{{user.id}}">
+        <a href="{{ url_for('delete_user', user_id=user.id) }}">
+          <img src="{{ url_for('static', filename='images/delete.png') }}" alt="" width="20" height="20">
+        </a>
+      </td>
+    </tr>
+
+  <div class="modal fade" id="modal-with-user-id{{user.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Updating User {{ user.first_name }} {{ user.last_name }}
+      </div>
+      <form action="{{ url_for('update_user', user_id=user.id) }}" method="post">
+        {% from 'macros.html' import render_field %}
+        {{ form.hidden_tag() }}
+        <div style="width: 70%; margin-left: 70px;">
+          <div class="mb-3" >
+          {{ render_field(form.first_name, user.first_name) }}
+        </div>
+        <div class="mb-3">
+          {{ render_field(form.last_name, user.last_name) }}
+        </div>
+        <div class="mb-3">
+          {{ render_field(form.age, user.age) }}
+        </div>
+          <div class="modal-footer">
+        <input type="submit" class="btn btn-secondary" data-bs-dismiss="modal" value="Close"/>
+        <input type="submit" class="btn btn-primary" value="Save changes"/>
+      </div>
+      </div>
+
+
+      </form>
+    </div>
+  </div>
+</div>
+  {% endfor %}
+
+  </tbody>
+</table>
 
 {% endblock %}
