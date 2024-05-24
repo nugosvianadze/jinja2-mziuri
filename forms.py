@@ -25,12 +25,14 @@ class RegistrationForm(FlaskForm):
                             render_kw={'class': 'form-control', 'placeholder': 'Enter Last Name'})
     age = IntegerField('Age', validators=[data_required()],
                        render_kw={'class': 'form-control', 'placeholder': 'Enter Age'})
-    birthday = DateField('Birthday', validators=[data_required()],
-                         render_kw={'class': 'form-control', 'placeholder': 'Enter Birthday Date'})
-    email = EmailField('Email', validators=[data_required(), email()],
-                       render_kw={'class': 'form-control', 'placeholder': 'Enter Email'})
-    password = PasswordField('Password', validators=[data_required()],
-                             render_kw={'class': 'form-control', 'placeholder': 'Enter Password'})
+    # birthday = DateField('Birthday', validators=[data_required()],
+    #                      render_kw={'class': 'form-control', 'placeholder': 'Enter Birthday Date'})
+    # email = EmailField('Email', validators=[data_required(), email()],
+    #                    render_kw={'class': 'form-control', 'placeholder': 'Enter Email'})
+    # password = PasswordField('Password', validators=[data_required()],
+    #                          render_kw={'class': 'form-control', 'placeholder': 'Enter Password'})
+    address = StringField('Address',
+                          render_kw={'class': 'form-control', 'placeholder': 'Enter Address'})
     submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary'})
 
 
