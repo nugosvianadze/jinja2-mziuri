@@ -6,6 +6,20 @@ body{
   margin: 0;
   padding: 0;
 }
+.error {
+color: red;
+list-style: none;
+}
+.warning {
+color: yellow;
+list-style: none;
+
+}
+.info {
+color: green;
+list-style: none;
+
+}
 a {
   color: #fff;
   text-decoration: none;

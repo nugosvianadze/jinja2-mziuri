@@ -16,11 +16,11 @@
 </head>
 <body>
 {% include 'components/header.html' %}
-{% with messages = get_flashed_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <ul class=flashes>
-    {% for message in messages %}
-      <li style="list-style: none;">{{ message }}</li>
+    {% for category, message in messages %}
+      <li class="{{ category }}">{{ message }}</li>
     {% endfor %}
     </ul>
   {% endif %}
