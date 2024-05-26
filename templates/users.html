@@ -14,7 +14,7 @@ users Page
       <th scope="col">Last Name</th>
       <th scope="col">Email</th>
       <th scope="col">Age</th>
-      <th scope="col">Birth Date</th>
+      <th scope="col">User Posts</th>
       <th scope="col">Actions</th>
     </tr>
   </thead>
@@ -27,7 +27,8 @@ users Page
       <td>{{ user.last_name }}</td>
       <td>{{ user.email }}</td>
       <td>{{ user.age }}</td>
-      <td>{{ user.birth_date }}</td>
+      <td><a href="{{ url_for('user_posts', user_id=user.id) }}" style="color: black">{{ user.posts|length }}</a></td>
+
       <td>
         <img src="{{ url_for('static', filename='images/update.png') }}" alt="" width="20" height="20"
              data-bs-toggle="modal" data-bs-target="#modal-with-user-id{{user.id}}">

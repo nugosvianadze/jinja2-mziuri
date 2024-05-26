@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
-from forms import LoginForm, RegistrationForm, UserUpdateForm
+from forms import LoginForm, RegistrationForm, UserUpdateForm, PostForm
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
-from sqlalchemy import Integer, String, SmallInteger, BigInteger, select
+from sqlalchemy import Integer, String, SmallInteger, BigInteger, select, ForeignKey
 
 app = Flask(__name__)
 
@@ -15,12 +15,13 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 # configure the SQLite database, relative to the app instance folder
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
 # initialize the app with the extension
 db.init_app(app)
 
 
 class User(db.Model):
+    __tablename__ = 'users'
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str]
@@ -28,6 +29,16 @@ class User(db.Model):
     address: Mapped[str]
 
 
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(100))
+    content: Mapped[str]
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    user = db.relationship('User', backref='posts')
+
+
+#
 # with app.app_context():
 #     print('Creating Database And Tables')
 #     db.create_all()
@@ -40,11 +51,6 @@ def middle(value):
         value = value[int(len_value)]
     return value
 
-
-def create_conn():
-    conn = sqlite3.connect('mziuri.db', check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 def create_cursor(conn):
@@ -130,7 +136,6 @@ def update_user(user_id):
     if not user:
         flash(f'User With this id-{user_id} Does Not Exists', 'error')
         return redirect(url_for('users'))
-
     # user = db.get_or_404(User, user_id)
     first_name = form.first_name.data
     last_name = form.last_name.data
@@ -159,6 +164,39 @@ def delete_user(user_id):
     flash("User Successfully Deleted!!!!!", 'info')
 
     return redirect(url_for('users'))
+
+
+@app.route('/user-posts/<int:user_id>')
+def user_posts(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash(f'User With ID={user_id} Does Not Exists!')
+        return redirect(url_for('users'))
+    posts = user.posts
+    return render_template('posts.html', posts=posts, user_id=user_id)
+
+
+@app.route('/create_posts/<int:user_id>', methods=['GET', 'POST'])
+def create_post(user_id):
+    form = PostForm()
+    user = User.query.get(user_id)
+    if not user:
+        flash(f'User With ID={user_id} Does Not Exists!')
+        return redirect(url_for('users'))
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            title = form.title.data
+            content = form.content.data
+            post = Post(title=title, content=content, user=user)
+            # user.posts.append(post) am shemtxvevashi user=user aghar gvinda
+            db.session.add(post)
+            db.session.commit()
+            flash('Post Successfuly Added')
+            return redirect(url_for('user_posts', user_id=user_id))
+        return render_template('create_post.html', form=form)
+
+    return render_template('create_post.html', form=form, user_id=user_id)
 
 
 if __name__ == '__main__':
