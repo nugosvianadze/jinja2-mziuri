@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
+from random import randrange
+from datetime import datetime
 from forms import LoginForm, RegistrationForm, UserUpdateForm, PostForm
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
-from sqlalchemy import Integer, String, SmallInteger, BigInteger, select, ForeignKey
+from sqlalchemy import Integer, String, SmallInteger, BigInteger, select, ForeignKey, DateTime
 
 app = Flask(__name__)
 
@@ -27,6 +29,7 @@ class User(db.Model):
     last_name: Mapped[str]
     age: Mapped[int] = mapped_column(SmallInteger)
     address: Mapped[str]
+    id_card = db.relationship('IdCard', back_populates='user', uselist=False)
 
 
 class Post(db.Model):
@@ -38,7 +41,16 @@ class Post(db.Model):
     user = db.relationship('User', backref='posts')
 
 
-#
+class IdCard(db.Model):
+    __tablename__ = 'id_cards'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    id_number: Mapped[int]
+    created_at = mapped_column(DateTime)
+    expire_at = mapped_column(DateTime)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), unique=True)
+    user = db.relationship('User', back_populates='id_card')
+
+
 # with app.app_context():
 #     print('Creating Database And Tables')
 #     db.create_all()
@@ -113,6 +125,7 @@ def register():
         return render_template('register.html', form=form)
     return render_template('register.html', form=form)
 
+
 app.secret_key = 'ijbiazbadub84v8rbsibiewfvidvsa'
 
 
@@ -141,12 +154,14 @@ def update_user(user_id):
     last_name = form.last_name.data
     age = form.age.data
     address = form.address.data
-
+    id_number = form.id_number.data
+    print(form.id_number.validators)
     old_first_name = user.first_name
     user.first_name = first_name
     user.last_name = last_name
     user.age = age
     user.address = address
+    user.id_card.id_number = id_number
     db.session.commit()
     flash(f'User {old_first_name} Successfully Updated!!', 'info')
     return redirect(url_for('users'))
@@ -189,7 +204,7 @@ def create_post(user_id):
             title = form.title.data
             content = form.content.data
             post = Post(title=title, content=content, user=user)
-            # user.posts.append(post) am shemtxvevashi user=user aghar gvinda
+            # user.posts.append(post)
             db.session.add(post)
             db.session.commit()
             flash('Post Successfuly Added')
@@ -197,6 +212,24 @@ def create_post(user_id):
         return render_template('create_post.html', form=form)
 
     return render_template('create_post.html', form=form, user_id=user_id)
+
+
+@app.route('/add_id_card/<int:user_id>')
+def add_id_card(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        flash(f'User With ID={user_id} Does Not Exists!')
+        return redirect(url_for('users'))
+    if user.id_card:
+        flash(f"User already has ID Card - {user.id_card.id_number}", 'error')
+        return redirect(url_for('users'))
+    id_card = IdCard(id_number=randrange(10000000000,99999999999),
+                     created_at=datetime.now(), expire_at=datetime(2027, 10, 7),
+                     user=user)
+    db.session.add(id_card)
+    db.session.commit()
+    flash(f"ID Card for User {user.first_name} successfully Created!!!")
+    return redirect(url_for('users'))
 
 
 if __name__ == '__main__':

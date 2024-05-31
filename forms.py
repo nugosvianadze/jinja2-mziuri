@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField
 from wtforms.fields import EmailField, StringField, PasswordField, SubmitField, IntegerField, DateField
-from wtforms.validators import data_required, email, length, ValidationError
+from wtforms.validators import data_required, email, length, ValidationError, InputRequired
 
 
 class LoginForm(FlaskForm):
@@ -36,11 +36,17 @@ class RegistrationForm(FlaskForm):
                           render_kw={'class': 'form-control', 'placeholder': 'Enter Address'})
     submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary'})
 
+def validate_id_number(form, field):
+    print(field.data > 99999999999)
+    if field.data > 99999999999:
+        raise ValidationError('Id Number Must Not be more than 11 letter')
+
 
 class UserUpdateForm(RegistrationForm):
     birthday = None
     email = None
     password = None
+    id_number = IntegerField('Id Number', [InputRequired(), validate_id_number])
 
 
 class PostForm(FlaskForm):

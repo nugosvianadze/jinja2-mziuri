@@ -12,7 +12,7 @@ users Page
       <th scope="col">#</th>
       <th scope="col">First Name</th>
       <th scope="col">Last Name</th>
-      <th scope="col">Email</th>
+      <th scope="col">Id Number</th>
       <th scope="col">Age</th>
       <th scope="col">User Posts</th>
       <th scope="col">Actions</th>
@@ -25,7 +25,7 @@ users Page
       <th scope="row">{{ loop.index }}</th>
       <td>{{ user.first_name }} </td>
       <td>{{ user.last_name }}</td>
-      <td>{{ user.email }}</td>
+      <td>{{ user.id_card.id_number }}</td>
       <td>{{ user.age }}</td>
       <td><a href="{{ url_for('user_posts', user_id=user.id) }}" style="color: black">{{ user.posts|length }}</a></td>
 
@@ -35,6 +35,7 @@ users Page
         <a href="{{ url_for('delete_user', user_id=user.id) }}">
           <img src="{{ url_for('static', filename='images/delete.png') }}" alt="" width="20" height="20">
         </a>
+        <a href="{{ url_for('add_id_card', user_id=user.id) }}" style="color: black; font-size: 20px;">+</a>
       </td>
     </tr>
 
@@ -63,6 +64,9 @@ users Page
         </div>
           <div class="mb-3">
           {{ render_field(form.address, user.address) }}
+        </div>
+          <div class="mb-3">
+          {{ render_field(form.id_number, user.id_card.id_number) }}
         </div>
           <div class="modal-footer">
         <input type="submit" class="btn btn-secondary" data-bs-dismiss="modal" value="Close"/>
