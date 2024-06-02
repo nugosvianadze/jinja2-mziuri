@@ -1,7 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField
-from wtforms.fields import EmailField, StringField, PasswordField, SubmitField, IntegerField, DateField
+from wtforms.fields import EmailField, StringField, PasswordField, SubmitField, IntegerField, DateField, SelectMultipleField
 from wtforms.validators import data_required, email, length, ValidationError, InputRequired
+
+from enums import RoleEnum
 
 
 class LoginForm(FlaskForm):
@@ -34,6 +36,8 @@ class RegistrationForm(FlaskForm):
     #                          render_kw={'class': 'form-control', 'placeholder': 'Enter Password'})
     address = StringField('Address',
                           render_kw={'class': 'form-control', 'placeholder': 'Enter Address'})
+    roles = SelectMultipleField('Roles',
+                                choices=[(role.value, role.name) for role in RoleEnum])
     submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary'})
 
 def validate_id_number(form, field):

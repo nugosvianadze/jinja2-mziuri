@@ -2,34 +2,56 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 from random import randrange
 from datetime import datetime
+
+import click
+
+from enums import RoleEnum
 from forms import LoginForm, RegistrationForm, UserUpdateForm, PostForm
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
-from sqlalchemy import Integer, String, SmallInteger, BigInteger, select, ForeignKey, DateTime
+from sqlalchemy import Integer, String, SmallInteger, BigInteger, select, ForeignKey, DateTime, MetaData
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 
 
 class Base(DeclarativeBase):
-  pass
+    metadata = MetaData(naming_convention={
+        "ix": 'ix_%(column_0_label)s',
+        "uq": "uq_%(table_name)s_%(column_0_name)s",
+        "ck": "ck_%(table_name)s_%(constraint_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s"
+    })
 
 
 db = SQLAlchemy(model_class=Base)
+migrate = Migrate()
 # configure the SQLite database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
 # initialize the app with the extension
 db.init_app(app)
+migrate.init_app(app, db)
+
+
+user_m2m_roles = db.Table(
+    'user_roles',
+    db.Column("user_id", db.ForeignKey('users.id'), primary_key=True),
+    db.Column("role_id", db.ForeignKey('roles.id'), primary_key=True)
+)
 
 
 class User(db.Model):
     __tablename__ = 'users'
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(50))
-    last_name: Mapped[str]
+    email: Mapped[str] = mapped_column(default='test@gmail.com')
     age: Mapped[int] = mapped_column(SmallInteger)
     address: Mapped[str]
     id_card = db.relationship('IdCard', back_populates='user', uselist=False)
+    roles = db.relationship('Role', secondary=user_m2m_roles,
+                            backref=db.backref('users', lazy='dynamic'))
 
 
 class Post(db.Model):
@@ -49,6 +71,18 @@ class IdCard(db.Model):
     expire_at = mapped_column(DateTime)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), unique=True)
     user = db.relationship('User', back_populates='id_card')
+
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str]
+
+    def __str__(self):
+        return self.title
+
+    def __repr__(self):
+        return self.title
 
 
 # with app.app_context():
@@ -74,6 +108,15 @@ def close_conn(conn):
 
 
 app.jinja_env.filters['middle'] = middle
+
+# creating commands
+
+@app.cli.command('create_roles')
+def create_roles():
+    roles = [Role(title=role.value) for role in RoleEnum]
+    db.session.add_all(roles)
+    db.session.commit()
+    click.echo('roles successfully created')
 
 
 @app.route('/')
@@ -107,9 +150,19 @@ def register():
             last_name = form.last_name.data
             age = form.age.data
             address = form.address.data
+            form_roles = form.roles.data
+            print(form_roles)
+            db_roles = Role.query.filter(Role.title.in_(form_roles)).all()
+
+            if len(form_roles) != len(db_roles):
+                non_exists = [role.title for role in db_roles]
+                non_exists = [role for role in form_roles if role not in non_exists]
+                roles = [Role(title=role) for role in non_exists]
+                db.session.add_all(roles)
+                db.session.commit()
+                flash(f'new roles {non_exists} created!!!!')
 
             user = User.query.filter_by(first_name=first_name).all()
-            print(user)
             if user:
                 # flash('User With This Email Already Exists!')
                 form.first_name.errors = ['User With This First Name Already Exists!']
@@ -117,6 +170,7 @@ def register():
 
             user = User(first_name=first_name, last_name=last_name,
                         age=age, address=address)
+            user.roles.extend(db_roles)
             db.session.add(user)
             db.session.commit()
             flash('User Successfully Created!!')
