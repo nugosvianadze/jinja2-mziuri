@@ -23,13 +23,13 @@ users Page
   {% for user in users %}
   <br>
     <tr>
-      <th scope="row">{{ loop.index }}</th>
+      <th scope="row"><a href="{{ url_for('user_posts', user_id=user.id) }}" style="color: black"><img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" alt="logo" width="40" height="40"></a></th>
       <td>{{ user.first_name }} </td>
       <td>{{ user.last_name }}</td>
       <td>{{ user.id_card.id_number }}</td>
       <td>{{ user.roles|join(', ') }}</td>
       <td>{{ user.age }}</td>
-      <td><a href="{{ url_for('user_posts', user_id=user.id) }}" style="color: black">{{ user.posts|length }}</a></td>
+      <td>{{ user.posts|length }}</td>
 
       <td>
         <img src="{{ url_for('static', filename='images/update.png') }}" alt="" width="20" height="20"

@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 from random import randrange
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import click
+from werkzeug.utils import secure_filename
+from functools import wraps
 
 from enums import RoleEnum
 from forms import LoginForm, RegistrationForm, UserUpdateForm, PostForm
@@ -30,6 +32,7 @@ db = SQLAlchemy(model_class=Base)
 migrate = Migrate()
 # configure the SQLite database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 # initialize the app with the extension
 db.init_app(app)
 migrate.init_app(app, db)
@@ -46,21 +49,31 @@ class User(db.Model):
     __tablename__ = 'users'
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(50))
+    last_name: Mapped[str]
     email: Mapped[str] = mapped_column(default='test@gmail.com')
+    password: Mapped[str] = mapped_column(nullable=True)
+    profile_picture: Mapped[str]
     age: Mapped[int] = mapped_column(SmallInteger)
     address: Mapped[str]
-    id_card = db.relationship('IdCard', back_populates='user', uselist=False)
+    id_card = db.relationship('IdCard', back_populates='user', uselist=False, cascade='all, delete')
     roles = db.relationship('Role', secondary=user_m2m_roles,
                             backref=db.backref('users', lazy='dynamic'))
+    posts = db.relationship('Post', backref='user', cascade='all, delete')
 
+    @classmethod
+    def check_credentials(cls, email, password):
+        user = cls.query.filter_by(email=email, password=password).first()
+        return user
 
+    @property
+    def full_name(self):
+        return self.first_name + self.last_name
 class Post(db.Model):
     __tablename__ = 'posts'
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(100))
     content: Mapped[str]
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
-    user = db.relationship('User', backref='posts')
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
 
 
 class IdCard(db.Model):
@@ -69,7 +82,7 @@ class IdCard(db.Model):
     id_number: Mapped[int]
     created_at = mapped_column(DateTime)
     expire_at = mapped_column(DateTime)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), unique=True)
     user = db.relationship('User', back_populates='id_card')
 
 
@@ -98,16 +111,12 @@ def middle(value):
     return value
 
 
-
-def create_cursor(conn):
-    return conn.cursor()
-
-
-def close_conn(conn):
-    return conn.close()
-
-
 app.jinja_env.filters['middle'] = middle
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+
 
 # creating commands
 
@@ -119,8 +128,30 @@ def create_roles():
     click.echo('roles successfully created')
 
 
+def is_authenticated(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not session.get('user_id'):
+            flash('U must log in')
+            return redirect(url_for('login'))
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def is_not_authenticated(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if session.get('user_id'):
+            return redirect(url_for('home'))
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 @app.route('/')
 @app.route('/home')
+@is_authenticated
 def home():
     first_name, last_name = 'nugzari', 'svianadze'
     num = 25
@@ -130,11 +161,19 @@ def home():
 
 
 @app.route('/login', methods=['GET', 'POST'])
+@is_not_authenticated
 def login():
     form = LoginForm()
     if request.method == 'POST':
         if form.validate_on_submit():
-            print('forma validuria')
+            email = form.email.data
+            password = form.password.data
+            user = User.check_credentials(email, password)
+            if not user:
+                flash('Invalid Credentials, Try Again!')
+                return redirect(url_for('login'))
+            session['user_id'] = user.id
+            session['full_name'] = user.full_name
             return redirect(url_for('home'))
         print(form.errors)
         return render_template('login.html', form=form)
@@ -142,16 +181,23 @@ def login():
 
 
 @app.route("/register", methods=["POST", "GET"])
+@is_not_authenticated
 def register():
     form = RegistrationForm()
     if request.method == "POST":
         if form.validate_on_submit():
             first_name = form.first_name.data
             last_name = form.last_name.data
+            email = form.email.data
+            password = form.password.data
+            profile_picture = form.profile_picture.data
             age = form.age.data
             address = form.address.data
             form_roles = form.roles.data
-            print(form_roles)
+
+            filename = secure_filename(profile_picture.filename)
+            profile_picture.save('static/uploads/' + filename)
+
             db_roles = Role.query.filter(Role.title.in_(form_roles)).all()
 
             if len(form_roles) != len(db_roles):
@@ -169,6 +215,7 @@ def register():
                 return render_template('register.html', form=form)
 
             user = User(first_name=first_name, last_name=last_name,
+                        email=email, password=password, profile_picture=filename,
                         age=age, address=address)
             user.roles.extend(db_roles)
             db.session.add(user)
@@ -184,7 +231,9 @@ app.secret_key = 'ijbiazbadub84v8rbsibiewfvidvsa'
 
 
 @app.route('/users')
+@is_authenticated
 def users():
+
     form = UserUpdateForm()
     # 1
     users_data = User.query.all()
@@ -284,6 +333,13 @@ def add_id_card(user_id):
     db.session.commit()
     flash(f"ID Card for User {user.first_name} successfully Created!!!")
     return redirect(url_for('users'))
+
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('full_name', None)
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':

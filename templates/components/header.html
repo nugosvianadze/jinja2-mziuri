@@ -14,10 +14,15 @@
           <input type="search" class="form-control form-control-dark text-bg-dark" placeholder="Search..." aria-label="Search">
         </form>
 
+        {% if not session.user_id %}
         <div class="text-end">
-          <button type="button" class="btn btn-outline-light me-2">Login</button>
+          <button type="button" class="btn btn-outline-light me-2"><a href="{{ url_for('login') }}">Login</a></button>
           <button type="button" class="btn btn-warning"><a href="{{ url_for('register') }}">Sign-up</a></button>
+
         </div>
+        {% else %}
+          <button type="button" class="btn btn-warning"><a href="{{ url_for('logout') }}">Log Out</a></button
+        {% endif %}
       </div>
     </div>
   </header>
