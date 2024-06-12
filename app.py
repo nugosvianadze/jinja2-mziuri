@@ -68,12 +68,22 @@ class User(db.Model):
     @property
     def full_name(self):
         return self.first_name + self.last_name
+
+
 class Post(db.Model):
     __tablename__ = 'posts'
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(100))
     content: Mapped[str]
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    images = db.relationship('PostImage', backref='post', cascade='all, delete')
+
+
+class PostImage(db.Model):
+    __tablename__ = 'post_images'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    image: Mapped[str]
+    post_id: Mapped[int] = mapped_column(ForeignKey('posts.id'))
 
 
 class IdCard(db.Model):
@@ -340,6 +350,14 @@ def logout():
     session.pop('user_id', None)
     session.pop('full_name', None)
     return redirect(url_for('login'))
+
+
+@app.route('/my-page')
+@is_authenticated
+def my_page():
+    user_id = session.get('user_id')
+    user = db.session.get(User, user_id)
+    return render_template('user_page.html', user=user)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,7 @@
+flask==3.0.3
+flask_wtf==1.2
+flask_sqlalchemy
+flask-migrate
+db-sqlite3
+click
+email_validator
