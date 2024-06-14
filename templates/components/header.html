@@ -6,10 +6,10 @@
         </a>
 
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-          <li><a href="{{ url_for('home') }}" class="nav-link px-2 text-secondary">Home</a></li>
-          <li><a href="{{ url_for('users') }}" class="nav-link px-2 text-white">Users</a></li>
+          <li><a href="{{ url_for('blog.home') }}" class="nav-link px-2 text-secondary">Home</a></li>
+          <li><a href="{{ url_for('user.users') }}" class="nav-link px-2 text-white">Users</a></li>
             {% if session.user_id %}
-                <li><a href="{{ url_for('my_page') }}" class="nav-link px-2 text-white">My Page</a></li>
+                <li><a href="{{ url_for('user.my_page') }}" class="nav-link px-2 text-white">My Page</a></li>
             {% endif %}
         </ul>
 
@@ -19,12 +19,12 @@
 
         {% if not session.user_id %}
         <div class="text-end">
-          <button type="button" class="btn btn-outline-light me-2"><a href="{{ url_for('login') }}">Login</a></button>
-          <button type="button" class="btn btn-warning"><a href="{{ url_for('register') }}">Sign-up</a></button>
+          <button type="button" class="btn btn-outline-light me-2"><a href="{{ url_for('user.login') }}">Login</a></button>
+          <button type="button" class="btn btn-warning"><a href="{{ url_for('user.register') }}">Sign-up</a></button>
 
         </div>
         {% else %}
-          <button type="button" class="btn btn-warning"><a href="{{ url_for('logout') }}">Log Out</a></button
+          <button type="button" class="btn btn-warning"><a href="{{ url_for('user.logout') }}">Log Out</a></button
         {% endif %}
       </div>
     </div>

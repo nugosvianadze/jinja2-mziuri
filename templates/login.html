@@ -6,7 +6,7 @@ Login Page
 
 {% block body %}
 <div style="display:flex; justify-content:center; align-items:center;">
-  <form style="width: 30%;" action="{{ url_for('login') }}" method="post">
+  <form style="width: 30%;" action="{{ url_for('user.login') }}" method="post">
     {{ form.hidden_tag() }}
     {% from 'macros.html' import render_input %}
   <div class="mb-3">

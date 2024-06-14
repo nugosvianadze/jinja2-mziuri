@@ -7,7 +7,7 @@ User Posts Page
 {% block body %}
 
 <div style="display: flex; justify-content: center;">
-  <form action="{{ url_for('create_post', user_id=user_id) }}" method="post" style="width: 30%;">
+  <form action="{{ url_for('blog.create_post', user_id=user_id) }}" method="post" style="width: 30%;">
     {{ form.hidden_tag() }}
     {% from 'macros.html' import render_field %}
   <div class="mb-3">

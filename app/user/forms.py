@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
-from wtforms import TextAreaField, FileField
-from wtforms.fields import EmailField, StringField, PasswordField, SubmitField, IntegerField, DateField, SelectMultipleField
-from wtforms.validators import data_required, email, length, ValidationError, InputRequired
+from wtforms import FileField
+from wtforms.fields import EmailField, StringField, PasswordField, SubmitField, IntegerField, SelectMultipleField
+from wtforms.validators import data_required, email, ValidationError, InputRequired
 
 from enums import RoleEnum
 
@@ -39,6 +39,7 @@ class RegistrationForm(FlaskForm):
                                 choices=[(role.value, role.name) for role in RoleEnum])
     submit = SubmitField('Sign In', render_kw={'class': 'btn btn-primary'})
 
+
 def validate_id_number(form, field):
     print(field.data > 99999999999)
     if field.data > 99999999999:
@@ -50,11 +51,3 @@ class UserUpdateForm(RegistrationForm):
     email = None
     password = None
     id_number = IntegerField('Id Number', [InputRequired(), validate_id_number])
-
-
-class PostForm(FlaskForm):
-    title = StringField('Title', validators=[data_required()],
-                        render_kw={'placeholder': 'შეიყვანეთ პოსტის სათაური', 'class': 'form-control'})
-    content = TextAreaField('Content    ', validators=[data_required()],
-                        render_kw={'placeholder': 'შეიყვანეთ პოსტის კონტენტი', 'class': 'form-control'})
-    submit = SubmitField('Create Post', render_kw={'class': 'btn btn-primary', 'style': 'text-align: center;'})

@@ -23,7 +23,7 @@ users Page
   {% for user in users %}
   <br>
     <tr>
-      <th scope="row"><a href="{{ url_for('user_posts', user_id=user.id) }}" style="color: black"><img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" alt="logo" width="40" height="40"></a></th>
+      <th scope="row"><a href="{{ url_for('user.user_posts', user_id=user.id) }}" style="color: black"><img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" alt="logo" width="40" height="40"></a></th>
       <td>{{ user.first_name }} </td>
       <td>{{ user.last_name }}</td>
       <td>{{ user.id_card.id_number }}</td>
@@ -34,10 +34,10 @@ users Page
       <td>
         <img src="{{ url_for('static', filename='images/update.png') }}" alt="" width="20" height="20"
              data-bs-toggle="modal" data-bs-target="#modal-with-user-id{{user.id}}">
-        <a href="{{ url_for('delete_user', user_id=user.id) }}">
+        <a href="{{ url_for('user.delete_user', user_id=user.id) }}">
           <img src="{{ url_for('static', filename='images/delete.png') }}" alt="" width="20" height="20">
         </a>
-        <a href="{{ url_for('add_id_card', user_id=user.id) }}" style="color: black; font-size: 20px;">+</a>
+        <a href="{{ url_for('blog.add_id_card', user_id=user.id) }}" style="color: black; font-size: 20px;">+</a>
       </td>
     </tr>
 
@@ -51,7 +51,7 @@ users Page
       <div class="modal-body">
         Updating User {{ user.first_name }} {{ user.last_name }}
       </div>
-      <form action="{{ url_for('update_user', user_id=user.id) }}" method="post">
+      <form action="{{ url_for('user.update_user', user_id=user.id) }}" method="post">
         {% from 'macros.html' import render_field %}
         {{ form.hidden_tag() }}
         <div style="width: 70%; margin-left: 70px;">
