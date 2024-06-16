@@ -8,10 +8,11 @@ from app.decorators import is_not_authenticated, is_authenticated
 from app.extensions import db
 from app.user.forms import LoginForm, RegistrationForm, UserUpdateForm
 from app.user.models import User
-from app.utils import TEMPLATE_FOLDER
+from app.utils import TEMPLATE_FOLDER, STATIC_FOLDER
 
-print(TEMPLATE_FOLDER)
-user_bp = Blueprint('user', __name__, template_folder=TEMPLATE_FOLDER, url_prefix='/user')
+
+user_bp = Blueprint('user', __name__, template_folder=TEMPLATE_FOLDER,
+                    url_prefix='/user', static_folder=STATIC_FOLDER)
 
 """localhost:5000/user/login"""
 

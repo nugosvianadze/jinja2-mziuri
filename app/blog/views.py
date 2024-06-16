@@ -8,10 +8,11 @@ from app.blog.models import Role, IdCard, Post
 from app.decorators import is_authenticated
 from app.extensions import db
 from app.user.models import User
-from app.utils import TEMPLATE_FOLDER
+from app.utils import TEMPLATE_FOLDER, STATIC_FOLDER
 
-print(TEMPLATE_FOLDER)
-blog_bp = Blueprint('blog', __name__, template_folder=TEMPLATE_FOLDER, url_prefix='/blog')
+
+blog_bp = Blueprint('blog', __name__, template_folder=TEMPLATE_FOLDER,
+                    url_prefix='/blog', static_folder=STATIC_FOLDER)
 
 
 @blog_bp.route('/')
